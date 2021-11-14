@@ -17,7 +17,7 @@ const resolvers = {
 
       return currentUser;
     },
-    allWords: async (parent, { username, password }, context) => {
+    allWords: async (parent, _, context) => {
       const { currentUser, dataSources } = context;
       const { User } = dataSources;
       if (!currentUser) {
@@ -53,7 +53,7 @@ const resolvers = {
 
       const { User } = dataSources;
 
-      const user = await User.findOne({ username });
+      const user = await User.findOne({ username }).select('hash');
       if (!user) {
         throw new UserInputError('wrong credentials');
       }
@@ -69,7 +69,7 @@ const resolvers = {
     addWord: async (parent, { word }, context) => {
       const { currentUser, dataSources } = context;
 
-      const { User } = dataSources;
+      const { User, Word } = dataSources;
 
       if (!currentUser) {
         throw new AuthenticationError('not authenticated');
@@ -80,14 +80,25 @@ const resolvers = {
           `https://api.dictionaryapi.dev/api/v2/entries/en/${word}`
         );
         const wordInfo = response.data;
+        const item = wordInfo[0];
 
-        wordInfo.forEach((item) => {
-          currentUser.words.push(item);
-        });
+        console.log(item);
 
-        const saved = await currentUser.save();
+        const existInDB = await Word.findOne({ word: item.word }).lean();
 
-        return wordInfo;
+        if (!existInDB) {
+          const saved = await new Word(item).save();
+
+          const targetUser = await User.findById(currentUser.id);
+
+          console.log(targetUser.words, saved._id);
+          targetUser.words.push(saved._id);
+
+          await targetUser.save();
+          return saved;
+        } else {
+          return null;
+        }
       } catch (err) {
         throw new ApolloError("Word doesn't exist", '404');
       }

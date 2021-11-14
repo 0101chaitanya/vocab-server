@@ -1,5 +1,9 @@
 const { gql } = require('apollo-server');
+const MONGOID = require('apollo-server-mongo-id-scalar');
+
 const typeDefs = gql`
+  scalar MONGOID
+
   type Definition {
     definition: String
     example: String
@@ -18,6 +22,7 @@ const typeDefs = gql`
   }
 
   type Word {
+    id: ID!
     word: String
     phonetic: String
     phonetics: [Phonetics]
@@ -27,12 +32,12 @@ const typeDefs = gql`
 
   type User {
     id: ID!
-    words: [Word]
+    words: [MONGOID]
   }
 
   type Query {
     currentUser(id: ID, username: String): User
-    allWords(id: ID, username: String): [Word]
+    allWords: [Word]
   }
 
   type Token {
@@ -45,7 +50,7 @@ const typeDefs = gql`
   type Mutation {
     register(username: String!, password: String!): User
     login(username: String!, password: String!): Token
-    addWord(word: String!): [Word]
+    addWord(word: String!): Word
   }
 `;
 

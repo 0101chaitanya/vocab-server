@@ -9,6 +9,8 @@ const base64pub = process.env.PUBLIC_KEY;
 const PUBLIC_KEY = Buffer.from(base64pub, 'base64');
 
 const User = require('./dbSchemas/userSchema');
+const Word = require('./dbSchemas/wordSchema');
+
 require('dotenv').config({ path: './.env' });
 
 mongoose
@@ -31,7 +33,9 @@ const server = new ApolloServer({
           PUBLIC_KEY,
           verifyOptions
         );
-        const currentUser = await User.findById(decodedToken.id);
+        const currentUser = await User.findById(decodedToken.id).populate(
+          'words'
+        );
         return { currentUser };
       } catch (err) {
         console.log(err);
@@ -43,6 +47,7 @@ const server = new ApolloServer({
 
   dataSources: () => ({
     User,
+    Word,
   }),
 });
 

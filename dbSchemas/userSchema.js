@@ -1,8 +1,9 @@
 const mongoose = require('mongoose');
 
 const uniqueValidator = require('mongoose-unique-validator');
+const Schema = mongoose.Schema;
 
-const userSchema = new mongoose.Schema({
+const userSchema = new Schema({
   username: {
     type: String,
     required: true,
@@ -19,31 +20,13 @@ const userSchema = new mongoose.Schema({
   },
   words: [
     {
-      word: String,
-      phonetic: String,
-      phonetics: [
-        {
-          text: String,
-          audio: String,
-        },
-      ],
-      origin: String,
-      meanings: [
-        {
-          partOfSpeech: String,
-          definitions: [
-            {
-              definition: String,
-              example: String,
-              synonyms: [String],
-              antonyms: [String],
-            },
-          ],
-        },
-      ],
+      type: Schema.Types.ObjectId,
+      ref: 'word',
     },
   ],
 });
+userSchema.set('toObject', { virtuals: true });
+userSchema.set('toJSON', { virtuals: true });
 
 userSchema.plugin(uniqueValidator);
 
