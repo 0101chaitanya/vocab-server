@@ -9,8 +9,14 @@ const userSchema = new mongoose.Schema({
     unique: true,
     minLength: 5,
   },
-  hash: String,
-  salt: String,
+  hash: {
+    type: String,
+    select: false,
+  },
+  salt: {
+    type: String,
+    select: false,
+  },
   words: [
     {
       word: String,
