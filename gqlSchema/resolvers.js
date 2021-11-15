@@ -41,11 +41,9 @@ const resolvers = {
           salt,
         });
         const user = await newUser.save();
-        return user;
+        return true;
       } catch (error) {
-        throw new UserInputError(error.message, {
-          invalidArgs: username,
-        });
+        return false;
       }
     },
     login: async (parent, { username, password }, context) => {
@@ -61,19 +59,20 @@ const resolvers = {
       if (isValid) {
         const { token, expires } = utils.issueJWT(user);
 
-        return { success: true, user, token, expiresIn: expires };
+        return { token };
       } else {
-        throw new UserInputError('wrong credentials');
+        return { token: null };
       }
     },
     addWord: async (parent, { word }, context) => {
       const { currentUser, dataSources } = context;
 
       const { User, Word } = dataSources;
-
+      console.log('lol');
       if (!currentUser) {
         throw new AuthenticationError('not authenticated');
       }
+      console.log(word);
 
       try {
         const response = await axios.get(
@@ -82,25 +81,28 @@ const resolvers = {
         const wordInfo = response.data;
         const item = wordInfo[0];
 
-        console.log(item);
-
-        const existInDB = await Word.findOne({ word: item.word }).lean();
-
+        const existInDB = await Word.findOne({ word: item.word });
+        let saved;
+        console.log('exist', existInDB.toObject());
         if (!existInDB) {
-          const saved = await new Word(item).save();
-
-          const targetUser = await User.findById(currentUser.id);
-
-          console.log(targetUser.words, saved._id);
-          targetUser.words.push(saved._id);
-
-          await targetUser.save();
-          return saved;
-        } else {
-          return null;
+          let saved = await new Word(item).save();
+          console.log('saved', saved.toObject());
         }
+
+        const targetUser = await User.findById(currentUser.id);
+
+        console.log('targetUser', targetUser.toObject());
+        if (!targetUser.toObject().words.includes(saved.toObject().id)) {
+          const savedUser = await User.findOneAndUpdate(
+            { _id: currentUser.id },
+            { $push: { words: saved.toObject().id } }
+          );
+          console.log('su', savedUser);
+        }
+        console.log(existInDB.toObject(), saved.toObject());
+        return existInDB ? existInDB.toObject().word : saved.toObject().word;
       } catch (err) {
-        throw new ApolloError("Word doesn't exist", '404');
+        throw new UserInputError();
       }
     },
   },
