@@ -31,8 +31,8 @@ const wordSchema = new mongoose.Schema({
   ],
 });
 
-wordSchema.set('toObject', { virtuals: true });
-wordSchema.set('toJSON', { virtuals: true });
+wordSchema.set('toObject', { getters: true, virtuals: true });
+wordSchema.set('toJSON', { getters: true, virtuals: true });
 
 wordSchema.plugin(uniqueValidator);
 

@@ -25,8 +25,11 @@ const userSchema = new Schema({
     },
   ],
 });
-userSchema.set('toObject', { virtuals: true });
-userSchema.set('toJSON', { virtuals: true });
+userSchema.set('toObject', { getters: true, virtuals: true });
+userSchema.set('toJSON', {
+  getters: true,
+  virtuals: true,
+});
 
 userSchema.plugin(uniqueValidator);
 

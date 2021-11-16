@@ -68,41 +68,49 @@ const resolvers = {
       const { currentUser, dataSources } = context;
 
       const { User, Word } = dataSources;
-      console.log('lol');
       if (!currentUser) {
         throw new AuthenticationError('not authenticated');
       }
-      console.log(word);
+
+      const response = await axios.get(
+        `https://api.dictionaryapi.dev/api/v2/entries/en/${word}`
+      );
+      const wordInfo = response.data;
+      const item = wordInfo[0];
+      console.log('0');
 
       try {
-        const response = await axios.get(
-          `https://api.dictionaryapi.dev/api/v2/entries/en/${word}`
-        );
-        const wordInfo = response.data;
-        const item = wordInfo[0];
-
         const existInDB = await Word.findOne({ word: item.word });
         let saved;
-        console.log('exist', existInDB.toObject());
         if (!existInDB) {
-          let saved = await new Word(item).save();
-          console.log('saved', saved.toObject());
+          saved = await new Word(item).save();
         }
+        console.log('1');
+        const targetUser = JSON.parse(
+          JSON.stringify(await User.findById(currentUser.id))
+        );
+        //console.log(targetUser);
+        const includeIn = targetUser.words.includes(
+          JSON.parse(JSON.stringify(existInDB ?? saved)).id
+        ); //._doc; //toObject({ getters: true }); //JSON.stringify
 
-        const targetUser = await User.findById(currentUser.id);
-
-        console.log('targetUser', targetUser.toObject());
-        if (!targetUser.toObject().words.includes(saved.toObject().id)) {
+        //.words.includes(saved.toObject().id);
+        console.log(includeIn);
+        if (!includeIn) {
           const savedUser = await User.findOneAndUpdate(
             { _id: currentUser.id },
             { $push: { words: saved.toObject().id } }
           );
-          console.log('su', savedUser);
+
+          console.log('2');
+          //return true;
+          return 'Word saved to database successfully';
         }
-        console.log(existInDB.toObject(), saved.toObject());
-        return existInDB ? existInDB.toObject().word : saved.toObject().word;
+        // return existInDB && includeIn ? false : true;
+        return 'Word already exist in list';
+        console.log('3');
       } catch (err) {
-        throw new UserInputError();
+        return 'Something went wrong';
       }
     },
   },

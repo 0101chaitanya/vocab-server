@@ -47,7 +47,7 @@ const typeDefs = gql`
   type Mutation {
     register(username: String!, password: String!): Boolean!
     login(username: String!, password: String!): Token
-    addWord(word: String!): String
+    addWord(word: String!): String!
   }
 `;
 
