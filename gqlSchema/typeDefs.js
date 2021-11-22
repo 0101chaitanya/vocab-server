@@ -38,6 +38,7 @@ const typeDefs = gql`
   type Query {
     currentUser(id: ID, username: String): User
     allWords: [Word]
+    matchingWords(searchQuery: String!): [Word]
   }
 
   type Token {
